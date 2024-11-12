@@ -33,15 +33,25 @@ class _HomeViewState extends State<HomeView> {
 				builder: (context, constraints) {
 
 					Widget buildServiceButton(Service service) {
-						return ElevatedButton.icon(
+						return ElevatedButton(
 							onPressed: () {
 								// Aquí puedes agregar la lógica para obtener el estado del servicio
 							},
-							icon: Icon(service.icon, color: Colors.white),
-							label: Text('${service.name} ${service.version}'),
 							style: ElevatedButton.styleFrom(
-								foregroundColor: Colors.white, backgroundColor: service.color,
+								foregroundColor: Colors.white, 
+                                backgroundColor: service.color,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10.0),
+                                ),
 							),
+                            child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                    Icon(service.icon, color: Colors.white),
+                                    const SizedBox(height: 10),
+							        Text('${service.name} ${service.version}'),
+                                ],
+                            ),
 						);
 					}
 
