@@ -5,12 +5,14 @@ class OperatingSystem {
 	Future<String> getPlatformInfo() async {
   		if (Platform.isLinux) {
     		var result = await Process.run('cat', ['/etc/os-release']);
-			print(result.stdout);
       		return getDistroInfo(result.stdout.toString().trim());
+
   		} else if (Platform.isMacOS) {
     		return 'MacOS';
   		} else if (Platform.isWindows) {
-    		return 'Windows';
+            ProcessResult result = await Process.run('systeminfo', []);
+            String output = result.stdout.toString();
+            return getWindowsVersion(output);
   		} else if (Platform.isAndroid) {
     		return 'Android';
   		} else if (Platform.isIOS) {
@@ -40,4 +42,15 @@ class OperatingSystem {
 
 		return '$name, $version';
 	}
+
+    String getWindowsVersion(String systemInfo) {
+        final versionRegex = RegExp(r'Nombre del sistema operativo:\s+Microsoft Windows (\d+ \w+)', multiLine: true);
+        final versionMatch = versionRegex.firstMatch(systemInfo);
+
+        if (versionMatch != null && versionMatch.groupCount >= 1) {
+            return 'Windows ${versionMatch.group(1)}';
+        }
+
+        return 'Windows';
+    }
 }
