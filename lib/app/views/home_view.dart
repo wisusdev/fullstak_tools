@@ -1,6 +1,15 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_pty/flutter_pty.dart';
+import 'package:fullstak_tools/app/platforms/windows/services.dart';
+import 'package:fullstak_tools/app/shared/operating_system.dart';
+import 'package:fullstak_tools/app/widgets/list_tile_service.dart';
 import 'package:fullstak_tools/app/widgets/side_menu_drawer.dart';
 import 'package:fullstak_tools/app/shared/responsive_layout.dart';
+import 'package:xterm/xterm.dart';
 
 class HomeView extends StatefulWidget {
 	const HomeView({super.key});
@@ -11,84 +20,145 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
 
-	List<Service> services = [
-		Service(name: 'Apache', version: '2.4.46', icon: Icons.web, color: Colors.red),
-		Service(name: 'PHP', version: '7.4', icon: Icons.code, color: Colors.blue),
-		Service(name: 'MySQL', version: '8.0', icon: Icons.storage, color: Colors.orange),
-		Service(name: 'Redis', version: '6.0', icon: Icons.memory, color: Colors.redAccent),
-		Service(name: 'Nginx', version: '1.18', icon: Icons.network_check, color: Colors.green),
-		Service(name: 'MariaDB', version: '10.5', icon: Icons.storage, color: Colors.blueAccent),
-		Service(name: 'MongoDB', version: '4.4', icon: Icons.storage, color: Colors.greenAccent),
+    String sistemVersion = '';
+
+	List<WindowsService> services = [
+		WindowsService(name: 'Apache', version: 'unknown', icon: Icons.dns, color: Colors.grey),
+		WindowsService(name: 'PHP', version: 'unknown', icon: Icons.code, color: Colors.grey),
+		WindowsService(name: 'MySQL', version: 'unknown', icon: Icons.storage, color: Colors.grey),
 	];
+
+    late final Pty pty;
+
+    final terminal = Terminal(
+        maxLines: 10000,
+    );
+
+	@override
+	void initState() {
+		super.initState();
+        _loadPlatformInfo();
+
+		for (var service in services) {
+
+			var version = WindowsService.getVersion(service.name);
+
+			if (version != null) {
+				version.then((value) {
+					setState(() {
+						service.version = value;
+                        service.color = Colors.green;
+					});
+				});
+			}
+		}
+
+        WidgetsBinding.instance.endOfFrame.then(
+            (_) {
+                if (mounted) _startPty();
+            },
+        );
+	}
+
+    void _startPty() {
+        pty = Pty.start(
+            shell,
+            columns: terminal.viewWidth,
+            rows: terminal.viewHeight,
+        );
+
+        pty.output.cast<List<int>>().transform(const Utf8Decoder()).listen(terminal.write);
+
+        pty.exitCode.then((code) {
+            terminal.write('the process exited with exit code $code');
+        });
+
+        terminal.onOutput = (data) {
+            pty.write(const Utf8Encoder().convert(data));
+        };
+
+        terminal.onResize = (w, h, pw, ph) {
+            pty.resize(h, w);
+        };
+    }
+
+    Future<void> _loadPlatformInfo() async {
+        String version = await OperatingSystem().getPlatformInfo();
+
+        setState(() {
+            sistemVersion = version;
+        });
+    }
+
+    final terminalController = TerminalController();
 
   	@override
   	Widget build(BuildContext context) {
     	return Scaffold(
 
       		appBar: AppBar(
-        		title: const Text('Inicio'),
+        		title: Text(sistemVersion, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                backgroundColor: Colors.yellow[200],
+                elevation: 4.0
       		),
 
       		body: LayoutBuilder(
 				builder: (context, constraints) {
 
-					Widget buildServiceButton(Service service) {
-						return ElevatedButton(
-							onPressed: () {
-								// Aquí puedes agregar la lógica para obtener el estado del servicio
-							},
-							style: ElevatedButton.styleFrom(
-								foregroundColor: Colors.white, 
-                                backgroundColor: service.color,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10.0),
-                                ),
-							),
-                            child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                    Icon(service.icon, color: Colors.white),
-                                    const SizedBox(height: 10),
-							        Text('${service.name} ${service.version}'),
-                                ],
-                            ),
-						);
+					Widget buildListService(WindowsService service) {
+                        return ListTileService(
+                            serviceColor: service.color,
+                            serviceIcon: service.icon,
+                            serviceName: service.name,
+                            serviceVersion: service.version,
+                            serviceActions: WindowsService.getActions(context, service.name),
+                        );
 					}
 
-					int crossAxisCount;
-
-					if (Responsive.isDesktop(context)) {
-						crossAxisCount = 6;
-					} else if (Responsive.isTablet(context)) {
-						crossAxisCount = 4;
-					} else {
-						crossAxisCount = 2;
-					}
-				
 					Widget runProcess = Expanded(
 						child: Container(
-							width: Responsive.containerMaxWidthSize(context, constraints, mobile: 1, tablet: 0.7, desktop: 0.7),
+							width: Responsive.containerMaxWidthSize(context, constraints, mobile: 1, tablet: 0.4, desktop: 0.3),
 							padding: const EdgeInsets.all(20.0),
-							child: GridView.count(
-								crossAxisCount: crossAxisCount,
-								crossAxisSpacing: 16.0,
-								mainAxisSpacing: 16.0,
-								children: services.map((service) => buildServiceButton(service)).toList(),
+							child: ListView(
+								children: services.map((service) => buildListService(service)).toList(),
 							),
 						),
 					);
 
 					Widget infoProcess = Container(
-						width: Responsive.containerMaxWidthSize(context, constraints, mobile: 1, tablet: 0.3, desktop: 0.3),
-						color: Colors.green,
-						child: const Center(
-							child: Text('100% Width Column'),
-						),
+						width: Responsive.containerMaxWidthSize(context, constraints, mobile: 1, tablet: 0.6, desktop: 0.7),
+                        decoration: const BoxDecoration(
+                            color: Colors.black,
+                        ),
+						child: TerminalView(
+                            terminal,
+                            controller: terminalController,
+                            autofocus: true,
+                            backgroundOpacity: 0.7,
+                            onSecondaryTapDown: (details, offset) async {
+                                final selection = terminalController.selection;
+                                
+                                if (selection != null) {
+                                    final text = terminal.buffer.getText(selection);
+                                    terminalController.clearSelection();
+                                    await Clipboard.setData(ClipboardData(text: text));
+                                } else {
+                                    final data = await Clipboard.getData('text/plain');
+                                    final text = data?.text;
+                                    
+                                    if (text != null) {
+                                        terminal.paste(text);
+                                    }
+                                }
+                            },
+                        ),
 					);
+
+
 
 					List<Widget> children = <Widget>[
 						runProcess,
-						infoProcess
+                        Responsive.isMobile(context) ? Expanded(child: infoProcess) : infoProcess,
 					];
 
 					return Responsive.isMobile(context) ? Column(children: children) : Row(children: children);
@@ -100,16 +170,14 @@ class _HomeViewState extends State<HomeView> {
   	}
 }
 
-class Service {
-	final String name;
-  	final String version;
-  	final IconData icon;
-  	final Color color;
+String get shell {
+    if (Platform.isMacOS || Platform.isLinux) {
+        return Platform.environment['SHELL'] ?? 'bash';
+    }
 
-  	Service({
-    	required this.name,
-    	required this.version,
-    	required this.icon,
-    	required this.color,
-  	});
+    if (Platform.isWindows) {
+        return 'cmd.exe';
+    }
+
+    return 'sh';
 }
