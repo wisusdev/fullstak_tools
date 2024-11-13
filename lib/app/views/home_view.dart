@@ -85,19 +85,21 @@ class _HomeViewState extends State<HomeView> {
 						),
 					);
 
-					Widget infoProcess = Container(
+					Widget logsInfo = Container(
 						width: Responsive.containerMaxWidthSize(context, constraints, mobile: 1, tablet: 0.6, desktop: 0.7),
                         decoration: const BoxDecoration(
                             color: Colors.black,
                         ),
-						child: const Text('Terminal', style: TextStyle(color: Colors.white)),
+						child: ListView(
+                            children: const [
+                                Text('Logs', style: TextStyle(color: Colors.white)),
+                            ],
+                        ),
 					);
-
-
 
 					List<Widget> children = <Widget>[
 						runProcess,
-                        infoProcess,
+                        logsInfo,
 					];
 
 					return Responsive.isMobile(context) ? Column(children: children) : Row(children: children);
