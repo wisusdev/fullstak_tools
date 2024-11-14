@@ -17,27 +17,21 @@ class _HomeViewState extends State<HomeView> {
 
     String sistemVersion = '';
 
-	List<WindowsService> services = [
-		WindowsService(name: 'Apache', version: 'unknown', icon: Icons.dns, color: Colors.grey),
-		WindowsService(name: 'PHP', version: 'unknown', icon: Icons.code, color: Colors.grey),
-		WindowsService(name: 'MySQL', version: 'unknown', icon: Icons.storage, color: Colors.grey),
-	];
-
 	@override
 	void initState() {
 		super.initState();
 
         _loadPlatformInfo();
 
-		for (var service in services) {
+		for (var service in WindowsService.servicesAvailable) {
 
-			var version = WindowsService.getVersion(service.name);
+			var version = WindowsService.getVersion(service['name']);
 
 			if (version != null) {
 				version.then((value) {
 					setState(() {
-						service.version = value;
-                        service.color = Colors.green;
+						service['version'] = value;
+                        service['color'] = Colors.green;
 					});
 				});
 			}
@@ -65,13 +59,13 @@ class _HomeViewState extends State<HomeView> {
       		body: LayoutBuilder(
 				builder: (context, constraints) {
 
-					Widget buildListService(WindowsService service) {
+					Widget buildListService(service) {
                         return ListTileService(
-                            serviceColor: service.color,
-                            serviceIcon: service.icon,
-                            serviceName: service.name,
-                            serviceVersion: service.version,
-                            serviceActions: WindowsService.getActions(context, service.name),
+                            serviceColor: service['color'],
+                            serviceIcon: service['icon'],
+                            serviceName: service['name'],
+                            serviceVersion: service['version'],
+                            serviceActions: WindowsService.getActions(context, service['name']),
                         );
 					}
 
@@ -80,7 +74,7 @@ class _HomeViewState extends State<HomeView> {
 							width: Responsive.containerMaxWidthSize(context, constraints, mobile: 1, tablet: 0.4, desktop: 0.3),
 							padding: const EdgeInsets.all(20.0),
 							child: ListView(
-								children: services.map((service) => buildListService(service)).toList(),
+								children: WindowsService.servicesAvailable.map((service) => buildListService(service)).toList(),
 							),
 						),
 					);
@@ -99,7 +93,7 @@ class _HomeViewState extends State<HomeView> {
 
 					List<Widget> children = <Widget>[
 						runProcess,
-                        logsInfo,
+                        Responsive.isMobile(context) ? Expanded(child: logsInfo) : logsInfo,
 					];
 
 					return Responsive.isMobile(context) ? Column(children: children) : Row(children: children);
