@@ -5,17 +5,26 @@ import 'package:fullstak_tools/app/platforms/windows/php_service.dart';
 
 class WindowsService {
 
-	final String name;
-  	String version;
-  	final IconData icon;
-  	Color color;
-
-  	WindowsService({
-    	required this.name,
-    	required this.version,
-    	required this.icon,
-    	required this.color,
-  	});
+    static List<Map<String, dynamic>> servicesAvailable  = [
+        {
+            'name': 'Apache',
+            'version': 'unknown',
+            'icon': Icons.dns,
+            'color': Colors.grey,
+        },
+        {
+            'name': 'PHP',
+            'version': 'unknown',
+            'icon': Icons.code,
+            'color': Colors.grey,
+        },
+        {
+            'name': 'MySQL',
+            'version': 'unknown',
+            'icon': Icons.storage,
+            'color': Colors.grey,
+        },
+    ];
 
     static getVersion(String service) {
 
@@ -30,6 +39,8 @@ class WindowsService {
         if (service == 'MySQL') {
             return MySQLService.getVersion();
         }
+
+        return 'unknown';
     }
 
     static getActions(BuildContext context, String service) {    
