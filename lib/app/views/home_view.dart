@@ -51,8 +51,12 @@ class _HomeViewState extends State<HomeView> {
         });
     }
 
-    getSystemServiceAction(BuildContext context, String service) {
-        if(Platform.isWindows) return WindowsService.getActions(context, service); 
+    Future<List<Widget>> getSystemServiceAction(BuildContext context, String service) async{
+        if(Platform.isWindows) {
+            return await WindowsService.getActions(context, service); 
+        }
+
+        return [];
     }
 
   	@override
@@ -69,14 +73,29 @@ class _HomeViewState extends State<HomeView> {
 				builder: (context, constraints) {
 
 					Widget buildListService(service) {
-                        return ListTileService(
-                            serviceColor: service['color'],
-                            serviceIcon: service['icon'],
-                            serviceName: service['name'],
-                            serviceVersion: service['version'],
-                            serviceActions: getSystemServiceAction(context, service['name']),
+                        return FutureBuilder<List<Widget>>(
+                            future: getSystemServiceAction(context, service['name']),
+                            builder: (context, snapshot) {
+                                List<Widget> actions;
+
+                                if (snapshot.connectionState == ConnectionState.waiting) {
+                                    actions = [const CircularProgressIndicator(color: Colors.white,)];
+                                } else if (snapshot.hasError) {
+                                    actions = [Text('Error: ${snapshot.error}')];
+                                } else {
+                                    actions = snapshot.data ?? [];
+                                }
+
+                                return ListTileService(
+                                    serviceColor: service['color'],
+                                    serviceIcon: service['icon'],
+                                    serviceName: service['name'],
+                                    serviceVersion: service['version'],
+                                    serviceActions: actions,
+                                );
+                            },
                         );
-					}
+                    }
 
 					Widget runProcess = Expanded(
 						child: Container(
