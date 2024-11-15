@@ -4,6 +4,38 @@ import 'package:flutter/material.dart';
 
 class PHPService {
 
+    static Future<List<Widget>> actions(BuildContext context) async {
+
+        List<Widget> actions = [];
+
+        Widget downloadButton = IconButton(
+            icon: const Icon(Icons.download),
+            color: Colors.white,
+            onPressed: () {
+                install();
+            },
+        );
+
+        Widget uninstallButton = IconButton(
+            icon: const Icon(Icons.delete),
+            color: Colors.white,
+            onPressed: () {
+                uninstall();
+            },
+        );
+
+    
+        String version = await getVersion();
+        
+        if (version == '') {
+            actions.add(downloadButton);
+        }
+
+        actions.add(uninstallButton);
+
+        return actions;
+    }
+
     static Future<String> getVersion() async {
         var process = await Process.start('php', ['--version'], runInShell: true);
 
@@ -60,24 +92,5 @@ class PHPService {
         }
 
         print(output);
-    }
-
-    static List<Widget> actions(BuildContext context) {
-        return [
-            IconButton(
-                icon: const Icon(Icons.download),
-                color: Colors.white,
-                onPressed: () {
-                    install();
-                },
-            ),
-            IconButton(
-                icon: const Icon(Icons.delete),
-                color: Colors.white,
-                onPressed: () {
-                    uninstall();
-                },
-            ),
-        ];
     }
 }
