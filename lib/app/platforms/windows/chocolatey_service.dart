@@ -1,6 +1,20 @@
 import 'dart:io';
 
+import 'package:flutter/material.dart';
+
 class ChocolateyService {
+
+    static List<Widget> actions(BuildContext context) {
+        return [
+            IconButton(
+                icon: const Icon(Icons.download),
+                color: Colors.white,
+                onPressed: () {
+                    install();
+                },
+            )
+        ];
+    }
 
     static Future<String> getVersion() async {
         var process = await Process.start('choco', ['--version'], runInShell: true);
