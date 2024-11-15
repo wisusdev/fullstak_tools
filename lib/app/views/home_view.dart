@@ -1,3 +1,4 @@
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:fullstak_tools/app/platforms/windows/services.dart';
@@ -16,14 +17,18 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> {
 
     String sistemVersion = '';
+    List<Map<String, dynamic>> servicesAvailable =[];
 
 	@override
 	void initState() {
 		super.initState();
 
+        if(Platform.isWindows) servicesAvailable = WindowsService.servicesAvailable;
+        
+
         _loadPlatformInfo();
 
-		for (var service in WindowsService.servicesAvailable) {
+		for (var service in servicesAvailable) {
 
 			var version = WindowsService.getVersion(service['name']);
 
@@ -46,6 +51,10 @@ class _HomeViewState extends State<HomeView> {
         });
     }
 
+    getSystemServiceAction(BuildContext context, String service) {
+        if(Platform.isWindows) return WindowsService.getActions(context, service); 
+    }
+
   	@override
   	Widget build(BuildContext context) {
     	return Scaffold(
@@ -65,7 +74,7 @@ class _HomeViewState extends State<HomeView> {
                             serviceIcon: service['icon'],
                             serviceName: service['name'],
                             serviceVersion: service['version'],
-                            serviceActions: WindowsService.getActions(context, service['name']),
+                            serviceActions: getSystemServiceAction(context, service['name']),
                         );
 					}
 
@@ -74,7 +83,7 @@ class _HomeViewState extends State<HomeView> {
 							width: Responsive.containerMaxWidthSize(context, constraints, mobile: 1, tablet: 0.4, desktop: 0.3),
 							padding: const EdgeInsets.all(20.0),
 							child: ListView(
-								children: WindowsService.servicesAvailable.map((service) => buildListService(service)).toList(),
+								children: servicesAvailable.map((service) => buildListService(service)).toList(),
 							),
 						),
 					);
