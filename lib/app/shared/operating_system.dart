@@ -6,7 +6,6 @@ class OperatingSystem {
   		if (Platform.isLinux) {
     		var result = await Process.run('cat', ['/etc/os-release']);
       		return getDistroInfo(result.stdout.toString().trim());
-
   		} else if (Platform.isMacOS) {
     		return 'MacOS';
   		} else if (Platform.isWindows) {
