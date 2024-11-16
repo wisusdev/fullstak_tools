@@ -43,7 +43,7 @@ class OperatingSystem {
 	}
 
     String getWindowsVersion(String systemInfo) {
-        final versionRegex = RegExp(r'Nombre del sistema operativo:\s+Microsoft Windows (\d+ \w+)', multiLine: true);
+        final versionRegex = RegExp(r'.*Microsoft Windows (\d+ \w+)', multiLine: true);
         final versionMatch = versionRegex.firstMatch(systemInfo);
 
         if (versionMatch != null && versionMatch.groupCount >= 1) {
