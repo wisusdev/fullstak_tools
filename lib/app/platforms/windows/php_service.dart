@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:fullstak_tools/app/shared/app_logs.dart';
 
 class PHPService {
 
@@ -51,7 +52,7 @@ class PHPService {
         }
 
         if (error.isNotEmpty) {
-            print('Error: $error');
+            Log().write('Error: $error', 'ERROR');
             return '';
         }
 
@@ -60,7 +61,7 @@ class PHPService {
 
     static Future<void> install() async {
 
-        print('Instalando PHP...');
+        Log().write('Instalando PHP...', 'INFO');
 
         var process = await Process.start('choco', ['install', 'php'], runInShell: true);
 
@@ -70,15 +71,15 @@ class PHPService {
         var error = await process.stderr.transform(const SystemEncoding().decoder).join();
 
         if (error.isNotEmpty) {
-            print('Error: $error');
+            Log().write('Error: $error', 'ERROR');
         }
 
-        print(output);
+        Log().write('PHP instalado - $output', 'INFO');
     }
 
     static Future<void> uninstall() async {
 
-        print('Desinstalando PHP...');
+        Log().write('Desinstalando PHP...', 'INFO');
 
         var process = await Process.start('choco', ['uninstall', 'php'], runInShell: true);
 
@@ -88,9 +89,9 @@ class PHPService {
         var error = await process.stderr.transform(const SystemEncoding().decoder).join();
 
         if (error.isNotEmpty) {
-            print('Error: $error');
+            Log().write('Error: $error', 'ERROR');
         }
 
-        print(output);
+        Log().write('PHP desinstalado - $output', 'INFO');
     }
 }
