@@ -35,6 +35,10 @@ class WindowsService {
 
     static getVersion(String service) {
 
+        if (service == 'Chcolatey') {
+            return ChocolateyService.getVersion();
+        }
+
         if (service == 'PHP') {
             return PHPService.getVersion();
         }
