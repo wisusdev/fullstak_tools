@@ -10,27 +10,9 @@ class WindowsService {
         {
             'name': 'Chcolatey',
             'version': 'unknown',
-            'icon': Icons.ac_unit,
+            'icon': Icons.cloud_download,
             'color': Colors.grey,
-        },
-        {
-            'name': 'Apache',
-            'version': 'unknown',
-            'icon': Icons.dns,
-            'color': Colors.grey,
-        },
-        {
-            'name': 'PHP',
-            'version': 'unknown',
-            'icon': Icons.code,
-            'color': Colors.grey,
-        },
-        {
-            'name': 'MySQL',
-            'version': 'unknown',
-            'icon': Icons.storage,
-            'color': Colors.grey,
-        },
+        }
     ];
 
     static getVersion(String service) {
@@ -54,10 +36,10 @@ class WindowsService {
         return null;
     }
 
-    static getActions(BuildContext context, String service) {    
+    static getActions(BuildContext context, String service, Function(String) updateServiceActions) {    
 
         if (service == 'Chcolatey') {
-            return ChocolateyService.actions(context);
+            return ChocolateyService.actions(context, updateServiceActions);
         }
 
         if (service == 'PHP') {
