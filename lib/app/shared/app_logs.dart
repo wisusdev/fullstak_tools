@@ -23,7 +23,7 @@ class Log {
 
         final now = DateTime.now().toLocal();
         final formattedDate = '${now.day}-${now.month}-${now.year} ${now.hour}:${now.minute}:${now.second}';
-        final logMessage = '#[$formattedDate] $level: $message';
+        final logMessage = '#[$formattedDate] $level: $message \n';
 
         _file!.writeAsStringSync(logMessage, mode: FileMode.append);
         _logController.add(await read()); // Emitir todos los logs actuales
