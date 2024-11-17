@@ -7,6 +7,7 @@ import 'package:fullstak_tools/app/shared/operating_system.dart';
 import 'package:fullstak_tools/app/widgets/list_tile_service.dart';
 import 'package:fullstak_tools/app/widgets/side_menu_drawer.dart';
 import 'package:fullstak_tools/app/shared/responsive_layout.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class HomeView extends StatefulWidget {
 	const HomeView({super.key});
@@ -36,9 +37,10 @@ class _HomeViewState extends State<HomeView> {
 		for (var service in servicesAvailable) {
 
 			var version = WindowsService.getVersion(service['name']);
-
+            
 			if (version != null) {
 				version.then((value) {
+                    _log.write('Service ${service['name']} version: $value', 'INFO');
 					setState(() {
 						service['version'] = value != '' ? value : 'Not installed';
                         service['color'] = value != '' ? Colors.green : Colors.grey;
@@ -87,11 +89,10 @@ class _HomeViewState extends State<HomeView> {
         }
     }
 
-    Future<List<Widget>> getSystemServiceAction(BuildContext context, String service) async{
-        if(Platform.isWindows) {
-            return await WindowsService.getActions(context, service); 
+    Future<List<Widget>> getSystemServiceAction(BuildContext context, String service) async {
+        if (Platform.isWindows) {
+            return await WindowsService.getActions(context, service, _updateServiceActions);
         }
-
         return [];
     }
 
@@ -107,6 +108,16 @@ class _HomeViewState extends State<HomeView> {
             if (_scrollController.hasClients) {
                 _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
             }
+        });
+    }
+
+    void _updateServiceActions(String serviceName) async {
+        var version = await WindowsService.getVersion(serviceName);
+        
+        setState(() {
+            var service = servicesAvailable.firstWhere((service) => service['name'] == serviceName);
+            service['version'] = version != '' ? version : 'Not installed';
+            service['color'] = version != '' ? Colors.green : Colors.grey;
         });
     }
 
@@ -206,8 +217,8 @@ class _HomeViewState extends State<HomeView> {
                                     return const Center(child: Text('No logs available', style: TextStyle(color: Colors.white)));
                                 // Muestra los logs en una lista si hay datos disponibles
                                 } else {
-                                    // Divide los logs en líneas
-                                    List<String> logLines = snapshot.data!.split('\n');
+                                    // Divide los logs en líneas utilizando '#' como delimitador y elimina saltos de línea adicionales
+                                    List<String> logLines = snapshot.data!.split('#').map((line) => line.trim()).where((line) => line.isNotEmpty).toList();
 
                                     // Desplaza automáticamente la lista de logs hacia abajo cuando se actualizan los datos
                                     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
@@ -218,7 +229,26 @@ class _HomeViewState extends State<HomeView> {
                                         itemCount: logLines.length,
                                         itemBuilder: (context, index) {
                                             String logLine = logLines[index];
-                                            return SelectableText(logLine, style: const TextStyle(color: Colors.white, fontSize: 15.0));
+
+                                            Color textColor = Colors.white;
+
+                                            if (logLine.contains('ERROR')) {
+                                                textColor = Colors.red;
+                                            } else if (logLine.contains('WARNING')) {
+                                                textColor = Colors.yellow;
+                                            } else if (logLine.contains('INFO')) {
+                                                textColor = Colors.green;
+                                            } else if (logLine.contains('DEBUG')) {
+                                                textColor = Colors.blue;
+                                            }
+
+                                            // Retorna un widget SelectableText con el texto de la línea de log
+                                            return SelectableText.rich(
+                                                TextSpan(
+                                                    text: logLine, 
+                                                    style: GoogleFonts.getFont('Montserrat', color: textColor, fontSize: 15.0)
+                                                ),
+                                            );
                                         },
                                     );
                                 }
