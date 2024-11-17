@@ -30,7 +30,7 @@ class ChocolateyService {
             icon: const Icon(Icons.link),
             color: Colors.white,
             onPressed: () async {
-                final Uri url = Uri.parse('https://chocolatey.org');
+                final Uri url = Uri.parse('https://community.chocolatey.org/packages');
                 
                 if(!await launchUrl(url, mode: LaunchMode.inAppBrowserView)) {
                     throw 'Could not launch $url';
@@ -108,39 +108,28 @@ class ChocolateyService {
     }
 
     static Future<String> uninstall() async {
+        Log().write('Uninstalling Chocolatey', 'INFO');
 
         // Delete Chocolatey folder
-        var chocolateyFolder = Directory(r'C:\ProgramData\chocolatey');
-        if (await chocolateyFolder.exists()) {
-            await chocolateyFolder.delete(recursive: true);
-            Log().write('Deleted Chocolatey folder', 'INFO');
-        } else {
-            Log().write('Chocolatey folder not found', 'INFO');
+        var process = await Process.start(
+            'powershell',
+            [
+                '-Command',
+                'Start-Process powershell -ArgumentList "Remove-Item -Path \'C:\\ProgramData\\chocolatey\' -Recurse -Force" -Verb runAs'
+            ],
+            runInShell: true,
+        );
+
+        await process.stdin.close();
+
+        var output = await process.stdout.transform(const SystemEncoding().decoder).join();
+        var error = await process.stderr.transform(const SystemEncoding().decoder).join();
+
+        if (error.isNotEmpty) {
+            Log().write('Error: $error', 'ERROR');
         }
 
-        // Remove environment variables
-        var envVars = [
-            'ChocolateyInstall',
-            'ChocolateyToolsLocation',
-            'ChocolateyLastPathUpdate'
-        ];
-
-        for (var envVar in envVars) {
-            await Process.run('powershell', ['-Command', 'Remove-ItemProperty', '-Path', 'HKCU:\\Environment', '-Name', envVar], runInShell: true);
-            await Process.run('powershell', ['-Command', 'Remove-ItemProperty', '-Path', 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment', '-Name', envVar], runInShell: true);
-            Log().write('Removed environment variable: $envVar', 'INFO');
-        }
-
-        // Update PATH variable
-        var path = Platform.environment['PATH'];
-        if (path != null) {
-            var newPath = path.split(';').where((p) => !p.contains('chocolatey')).join(';');
-            await Process.run('powershell', ['-Command', '[System.Environment]::SetEnvironmentVariable("PATH", "$newPath", "User")'], runInShell: true);
-            await Process.run('powershell', ['-Command', '[System.Environment]::SetEnvironmentVariable("PATH", "$newPath", "Machine")'], runInShell: true);
-            Log().write('Updated PATH variable', 'INFO');
-        }
-
-        Log().write('Chocolatey uninstalled successfully', 'INFO');
+        Log().write('Chocolatey uninstalled successfully: $output', 'INFO');
 
         return '';
     }
