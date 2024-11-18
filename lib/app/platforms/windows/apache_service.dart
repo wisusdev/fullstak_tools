@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:fullstak_tools/app/shared/app_logs.dart';
+
 class ApacheService {
 
     static Future<String> getVersion() async {
@@ -17,7 +19,7 @@ class ApacheService {
         }
 
         if (error.isNotEmpty) {
-            print('Error: $error');
+            Log().write('Error al obtener la versión de Apache: $error', 'ERROR');
             return '';
         }
 
@@ -25,9 +27,6 @@ class ApacheService {
     }
 
     static Future<void> install() async {
-
-        print('Instalando Apache...');
-
         var process = await Process.start('choco', ['install', 'apache'], runInShell: true);
 
         await process.stdin.close();
@@ -36,16 +35,13 @@ class ApacheService {
         var error = await process.stderr.transform(const SystemEncoding().decoder).join();
 
         if (error.isNotEmpty) {
-            print('Error: $error');
+            Log().write('Error al instalar Apache: $error', 'ERROR');
+        } else {
+            Log().write('Apache instalado: $output', 'INFO');
         }
-
-        print(output);
     }
 
     static Future<void> uninstall() async {
-
-        print('Desinstalando Apache...');
-
         var process = await Process.start('choco', ['uninstall', 'apache'], runInShell: true);
 
         await process.stdin.close();
@@ -54,15 +50,13 @@ class ApacheService {
         var error = await process.stderr.transform(const SystemEncoding().decoder).join();
 
         if (error.isNotEmpty) {
-            print('Error: $error');
+            Log().write('Error al desinstalar Apache: $error', 'ERROR');
+        } else {
+            Log().write('Apache desinstalado: $output', 'INFO');
         }
-
-        print(output);
     }
 
     static Future<void> start() async {
-
-        print('Iniciando Apache...');
 
         var process = await Process.start('httpd', ['-k', 'start'], runInShell: true);
 
@@ -72,16 +66,13 @@ class ApacheService {
         var error = await process.stderr.transform(const SystemEncoding().decoder).join();
 
         if (error.isNotEmpty) {
-            print('Error: $error');
+            Log().write('Error al iniciar Apache: $error', 'ERROR');
+        } else {
+            Log().write('Apache iniciado: $output', 'INFO');
         }
-
-        print(output);
     }
 
     static Future<void> stop() async {
-
-        print('Parando Apache...');
-
         var process = await Process.start('httpd', ['-k', 'stop'], runInShell: true);
 
         await process.stdin.close();
@@ -90,16 +81,13 @@ class ApacheService {
         var error = await process.stderr.transform(const SystemEncoding().decoder).join();
 
         if (error.isNotEmpty) {
-            print('Error: $error');
+            Log().write('Error al detener Apache: $error', 'ERROR');
+        } else {
+            Log().write('Apache detenido: $output', 'INFO');
         }
-
-        print(output);
     }
 
     static Future<void> restart() async {
-
-        print('Reiniciando Apache...');
-
         var process = await Process.start('httpd', ['-k', 'restart'], runInShell: true);
 
         await process.stdin.close();
@@ -108,9 +96,9 @@ class ApacheService {
         var error = await process.stderr.transform(const SystemEncoding().decoder).join();
 
         if (error.isNotEmpty) {
-            print('Error: $error');
+            Log().write('Error al reiniciar Apache: $error', 'ERROR');
+        } else {
+            Log().write('Apache reiniciado: $output', 'INFO');
         }
-
-        print(output);
     }
 }
