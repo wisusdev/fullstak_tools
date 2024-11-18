@@ -1,15 +1,14 @@
 import 'dart:io';
 
+import 'package:fullstak_tools/app/shared/app_logs.dart';
+
 Future<String?> solicitarContrasena() async {
-    print('Por favor, ingrese su contraseña de administrador:');
     String? contrasena = stdin.readLineSync();
     return contrasena;
 }
 
 Future<void> instalarEnLinux() async {
     String? contrasena = await solicitarContrasena();
-
-    print('Actualizando lista de paquetes...');
 
     var process = await Process.start('sudo', ['-S', 'apt', 'update'], runInShell: true);
 
@@ -19,10 +18,10 @@ Future<void> instalarEnLinux() async {
 
     var output = await process.stdout.transform(const SystemEncoding().decoder).join();
     var error = await process.stderr.transform(const SystemEncoding().decoder).join();
-
-    print(output);
     
     if (error.isNotEmpty) {
-        print('Error: $error');
+        Log().write('Error al actualizar el repositorio en Linux: $error', 'ERROR');
+    } else {
+        Log().write('Repositorio actualizado en Linux: $output', 'INFO');
     }
 }
