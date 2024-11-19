@@ -5,34 +5,35 @@ import 'package:fullstak_tools/app/shared/app_logs.dart';
 
 class PHPService {
 
-    static Future<List<Widget>> actions(BuildContext context) async {
+    static Future<List<Widget>> actions(BuildContext context, Function(String) updateServiceActions) async {
 
         List<Widget> actions = [];
 
         Widget downloadButton = IconButton(
             icon: const Icon(Icons.download),
             color: Colors.white,
-            onPressed: () {
-                install();
+            onPressed: () async {
+                await install();
+                updateServiceActions('PHP');
             },
         );
 
         Widget uninstallButton = IconButton(
             icon: const Icon(Icons.delete),
             color: Colors.white,
-            onPressed: () {
-                uninstall();
+            onPressed: () async {
+                await uninstall();
+                updateServiceActions('PHP');
             },
         );
 
-    
         String version = await getVersion();
         
         if (version == '') {
             actions.add(downloadButton);
+        } else {
+            actions.add(uninstallButton);
         }
-
-        actions.add(uninstallButton);
 
         return actions;
     }
