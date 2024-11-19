@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 class ChocolateyService {
     
     static Future<List<Widget>> actions(BuildContext context, Function(String) updateServiceActions) async {
+        
         List<Widget> actions = [];
 
         Widget installButton = IconButton(
