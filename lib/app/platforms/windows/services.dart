@@ -12,7 +12,13 @@ class WindowsService {
             'version': 'unknown',
             'icon': Icons.cloud_download,
             'color': Colors.grey,
-        }
+        },
+        {
+            'name': 'PHP',
+            'version': 'unknown',
+            'icon': Icons.code,
+            'color': Colors.grey,
+        },
     ];
 
     static getVersion(String service) {
@@ -43,7 +49,7 @@ class WindowsService {
         }
 
         if (service == 'PHP') {
-            return PHPService.actions(context);
+            return PHPService.actions(context, updateServiceActions);
         }
 
         return <Widget>[];
