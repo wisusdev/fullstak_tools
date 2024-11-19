@@ -52,4 +52,20 @@ class OperatingSystem {
 
         return 'Windows';
     }
+
+    copyToClipboard(String text) async {
+        if (Platform.isLinux) {
+            var process = await Process.start('xclip', ['-selection', 'clipboard']);
+            process.stdin.write(text);
+            await process.stdin.close();
+        } else if (Platform.isMacOS) {
+            var process = await Process.start('pbcopy', []);
+            process.stdin.write(text);
+            await process.stdin.close();
+        } else if (Platform.isWindows) {
+            var process = await Process.start('clip', []);
+            process.stdin.write(text);
+            await process.stdin.close();
+        }
+    }
 }
