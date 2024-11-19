@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:fullstak_tools/app/shared/app_logs.dart';
+
 class MySQLService {
     
     static Future<String> getVersion() async {
@@ -17,17 +19,16 @@ class MySQLService {
         }
 
         if (error.isNotEmpty) {
-            print('Error: $error');
+            Log().write('Error al obtener la versión de MySQL: $error', 'ERROR');
             return '';
+        } else {
+            Log().write('Versión de MySQL: $output', 'INFO');
         }
 
         return output;
     }
 
     static Future<void> install() async {
-
-        print('Instalando MySQL...');
-
         var process = await Process.start('choco', ['install', 'mysql'], runInShell: true);
 
         await process.stdin.close();
@@ -36,16 +37,13 @@ class MySQLService {
         var error = await process.stderr.transform(const SystemEncoding().decoder).join();
 
         if (error.isNotEmpty) {
-            print('Error: $error');
+            Log().write('Error al instalar MySQL: $error', 'ERROR');
+        } else {
+            Log().write('MySQL instalado: $output', 'INFO');
         }
-
-        print(output);
     }
 
     static Future<void> uninstall() async {
-
-        print('Desinstalando MySQL...');
-
         var process = await Process.start('choco', ['uninstall', 'mysql'], runInShell: true);
 
         await process.stdin.close();
@@ -54,9 +52,9 @@ class MySQLService {
         var error = await process.stderr.transform(const SystemEncoding().decoder).join();
 
         if (error.isNotEmpty) {
-            print('Error: $error');
+            Log().write('Error al desinstalar MySQL: $error', 'ERROR');
+        } else {
+            Log().write('MySQL desinstalado: $output', 'INFO');
         }
-
-        print(output);
     }
 }
