@@ -94,15 +94,34 @@ class ChocolateyService {
             runInShell: true,
         );
 
-        await process.stdin.close();
+        await process.stdin.close();        
 
         var output = await process.stdout.transform(const SystemEncoding().decoder).join();
         var error = await process.stderr.transform(const SystemEncoding().decoder).join();
 
         if (error.isNotEmpty) {
             Log().write('Error: $error', 'ERROR');
-        } else {
-            Log().write('Chocolatey installed successfully: $output', 'INFO');
+        }
+
+        // Esperar unos segundos adicionales para asegurarse de que la carpeta se haya creado
+        await Future.delayed(const Duration(seconds: 10));
+
+        // Verificar si la carpeta se creó cada 2 segundos, pero finalizar después de 60 segundos
+        int elapsedSeconds = 0;
+        const int checkInterval = 2;
+        const int timeout = 60;
+
+        while (elapsedSeconds < timeout) {
+            if (await Directory('C:\\ProgramData\\chocolatey').exists()) {
+                Log().write('Chocolatey installed successfully', 'INFO');
+                break;
+            }
+            await Future.delayed(const Duration(seconds: checkInterval));
+            elapsedSeconds += checkInterval;
+        }
+
+        if (elapsedSeconds >= timeout) {
+            Log().write('Error creating Chocolatey folder: Timeout', 'ERROR');
         }
 
         return output;
@@ -119,7 +138,7 @@ class ChocolateyService {
             Log().write('Retrying to delete Chocolatey folder', 'WARNING');
             output = await deleteChocolateyFolder();
         }
-
+        print(output);
         return output;
     }
 
