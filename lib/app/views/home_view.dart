@@ -73,7 +73,10 @@ class _HomeViewState extends State<HomeView> {
                 context: context,
                 builder: (context) {
                     return AlertDialog(
-                        title: const Text('Log File Path'),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(7.0),
+                        ),
+                        title: const Text('Log file path'),
                         content: Text(path),
                         actions: [
                             TextButton(
@@ -82,6 +85,12 @@ class _HomeViewState extends State<HomeView> {
                                 },
                                 child: const Text('OK'),
                             ),
+                            TextButton(
+                                onPressed: () {
+                                    OperatingSystem().copyToClipboard(path);
+                                },
+                                child: const Text('Copy Path'),
+                            )
                         ],
                     );
                 },
@@ -114,6 +123,8 @@ class _HomeViewState extends State<HomeView> {
     void _updateServiceActions(String serviceName) async {
         var version = await WindowsService.getVersion(serviceName);
         
+        print('Service $serviceName version: $version');
+
         setState(() {
             var service = servicesAvailable.firstWhere((service) => service['name'] == serviceName);
             service['version'] = version != '' ? version : 'Not installed';
@@ -163,6 +174,7 @@ class _HomeViewState extends State<HomeView> {
 					Widget buildListService(service) {
                         return FutureBuilder<List<Widget>>(
                             future: getSystemServiceAction(context, service['name']),
+
                             builder: (context, snapshot) {
                                 List<Widget> actions;
 
@@ -246,7 +258,7 @@ class _HomeViewState extends State<HomeView> {
                                             return SelectableText.rich(
                                                 TextSpan(
                                                     text: logLine, 
-                                                    style: GoogleFonts.getFont('Montserrat', color: textColor, fontSize: 15.0)
+                                                    style: GoogleFonts.getFont('Ubuntu Mono', color: textColor, fontSize: 16.0)
                                                 ),
                                             );
                                         },
