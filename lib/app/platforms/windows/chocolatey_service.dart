@@ -139,7 +139,6 @@ class ChocolateyService {
             Log().write('Retrying to delete Chocolatey folder', 'WARNING');
             output = await deleteChocolateyFolder();
         }
-        print(output);
         return output;
     }
 
