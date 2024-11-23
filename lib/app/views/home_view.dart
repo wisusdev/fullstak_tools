@@ -20,7 +20,9 @@ class _HomeViewState extends State<HomeView> {
 
     String sistemVersion = '';
     List<Map<String, dynamic>> servicesAvailable =[];
+    
     final Log _log = Log();
+    final WindowsService _windowsService = WindowsService();
     final ScrollController _scrollController = ScrollController();
 
     Stream<String> get logStream => _log.logStream();
@@ -36,7 +38,7 @@ class _HomeViewState extends State<HomeView> {
 
 		for (var service in servicesAvailable) {
 
-			var version = WindowsService.getVersion(service['name']);
+			var version = _windowsService.getVersion(service['name']);
             
 			if (version != null) {
 				version.then((value) {
@@ -100,7 +102,7 @@ class _HomeViewState extends State<HomeView> {
 
     Future<List<Widget>> getSystemServiceAction(BuildContext context, String service) async {
         if (Platform.isWindows) {
-            return await WindowsService.getActions(context, service, _updateServiceActions);
+            return await _windowsService.getActions(context, service, _updateServiceActions);
         }
         return [];
     }
@@ -121,10 +123,8 @@ class _HomeViewState extends State<HomeView> {
     }
 
     void _updateServiceActions(String serviceName) async {
-        var version = await WindowsService.getVersion(serviceName);
+        var version = await _windowsService.getVersion(serviceName);
         
-        print('Service $serviceName version: $version');
-
         setState(() {
             var service = servicesAvailable.firstWhere((service) => service['name'] == serviceName);
             service['version'] = version != '' ? version : 'Not installed';
