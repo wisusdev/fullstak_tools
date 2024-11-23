@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:fullstak_tools/app/config/app.dart';
 import 'package:fullstak_tools/app/shared/app_logs.dart';
 
 class ApacheService {
@@ -27,7 +28,11 @@ class ApacheService {
     }
 
     static Future<void> install() async {
-        var process = await Process.start('choco', ['install', 'apache'], runInShell: true);
+
+        var process = await Process.start('powershell', [
+            '-Command',
+            'Invoke-WebRequest -Uri "https://www.apachelounge.com/download/VS16/binaries/httpd-2.4.57-win64-VS16.zip" -OutFile "$windowsInstallPath\\Apache24.zip"; Expand-Archive -Path "$windowsInstallPath\\Apache24.zip" -DestinationPath "$windowsInstallPath\\Apache24"; Remove-Item -Path "$windowsInstallPath\\Apache24.zip"'
+        ], runInShell: true);
 
         await process.stdin.close();
 
@@ -42,7 +47,10 @@ class ApacheService {
     }
 
     static Future<void> uninstall() async {
-        var process = await Process.start('choco', ['uninstall', 'apache'], runInShell: true);
+        var process = await Process.start('powershell', [
+            '-Command',
+            'Remove-Item -Recurse -Force "$windowsInstallPath\\Apache24"'
+        ], runInShell: true);
 
         await process.stdin.close();
 
