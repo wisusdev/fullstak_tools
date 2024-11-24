@@ -100,10 +100,11 @@ class _HomeViewState extends State<HomeView> {
         }
     }
 
-    Future<List<Widget>> getSystemServiceAction(BuildContext context, String service) async {
+    Future<List<Map<String, dynamic>>> getSystemServiceAction(BuildContext context, String service) async {
         if (Platform.isWindows) {
             return await _windowsService.getActions(context, service, _updateServiceActions);
         }
+
         return [];
     }
 
@@ -172,16 +173,17 @@ class _HomeViewState extends State<HomeView> {
 
 					// Función para construir el widget ListTileService para cada servicio
 					Widget buildListService(service) {
-                        return FutureBuilder<List<Widget>>(
+                        return FutureBuilder<List<Map<String, dynamic>>>(
+                            
                             future: getSystemServiceAction(context, service['name']),
 
                             builder: (context, snapshot) {
-                                List<Widget> actions;
+                                List<Map<String, dynamic>> actions;
 
-                                if (snapshot.connectionState == ConnectionState.waiting) {
-                                    actions = [const CircularProgressIndicator(color: Colors.white,)];
+                                if (snapshot.connectionState == ConnectionState.waiting) { 
+                                    actions = [{ 'icon': Icons.hourglass_empty, 'text': 'Loading...' }];
                                 } else if (snapshot.hasError) {
-                                    actions = [Text('Error: ${snapshot.error}')];
+                                    actions = [{ 'icon': Icons.error, 'text': 'Error loading actions' }];
                                 } else {
                                     actions = snapshot.data ?? [];
                                 }
