@@ -6,39 +6,60 @@ import 'package:fullstak_tools/app/shared/app_logs.dart';
 
 class PHPService {
 
+    final String phpVersion;
     var windowsPath = '$windowsInstallPath\\php';
-
-    var phpVersion = 'php-8.4.1-Win32-vs17-x64';
     var phpFileDownloadExtension = 'zip';
     var phpDownloadnUrl = 'https://windows.php.net/downloads/releases';
 
-    Future<List<Widget>> actions(BuildContext context, Function(String) updateServiceActions) async {
+    PHPService({
+        this.phpVersion = 'php-8.4.1-Win32-vs17-x64',
+    });
 
-        List<Widget> actions = [];
+    Future<List<Map<String, dynamic>>> actions(BuildContext context, Function(String) updateServiceActions) async {
 
-        Widget downloadButton = IconButton(
-            icon: const Icon(Icons.download),
-            color: Colors.white,
-            onPressed: () async {
+        List<Map<String, dynamic>> actions = [];
+
+        Map<String, dynamic> downloadButton = {
+            'icon': Icons.download,
+            'label': 'Instalar',
+            'onPressed': () async {
                 await install();
                 updateServiceActions('PHP');
-            },
-        );
+            }
+        };
 
-        Widget uninstallButton = IconButton(
-            icon: const Icon(Icons.delete),
-            color: Colors.white,
-            onPressed: () async {
+        Map<String, dynamic> uninstallButton = {
+            'icon': Icons.delete,
+            'label': 'Desinstalar',
+            'onPressed': () async {
                 await uninstall();
                 updateServiceActions('PHP');
-            },
-        );
+            }
+        };
+
+        Map<String, dynamic> openFolderButton = {
+            'icon': Icons.folder_open,
+            'label': 'Abrir carpeta de instalación',
+            'onPressed': () async {
+                await openFolder();
+            }
+        };
+
+        Map<String, dynamic> addToPathButton = {
+            'icon': Icons.add,
+            'label': 'Agregar al PATH',
+            'onPressed': () async {
+                await addToPath();
+            }
+        };
 
         String version = await getVersion();
         
         if (version == '') {
             actions.add(downloadButton);
         } else {
+            actions.add(addToPathButton);
+            actions.add(openFolderButton);
             actions.add(uninstallButton);
         }
 
@@ -97,7 +118,7 @@ class PHPService {
 
         while (elapsedSeconds < timeout) {
             if (await Directory('$windowsPath\\$phpVersion').exists()) {
-                Log().write('PHP instalado - $output', 'INFO');
+                Log().write('$phpVersion instalado', 'INFO');
                 break;
             }
 
@@ -131,7 +152,73 @@ class PHPService {
         if (error.isNotEmpty) {
             Log().write('Error: $error', 'ERROR');
         } else {
-            Log().write('PHP desinstalado', 'INFO');
+            Log().write('$phpVersion desinstalado', 'INFO');
+        }
+
+        return output;
+    }
+
+    Future<String> openFolder() async {
+        if (!await Directory('$windowsPath\\$phpVersion').exists()) {
+            Log().write('Error: El directorio de PHP no existe', 'ERROR');
+            return 'Error: El directorio de PHP no existe';
+        }
+
+        var process = await Process.start('explorer', ['$windowsPath\\$phpVersion'], runInShell: true);
+
+        await process.stdin.close();
+
+        var output = await process.stdout.transform(const SystemEncoding().decoder).join();
+        var error = await process.stderr.transform(const SystemEncoding().decoder).join();
+
+        if (error.isNotEmpty) {
+            Log().write('Error: $error', 'ERROR');
+        }
+
+        return output;
+    }
+
+    Future<String> addToPath() async {
+
+        if (!await Directory('$windowsPath\\$phpVersion').exists()) {
+            Log().write('Error: El directorio de PHP no existe', 'ERROR');
+            return 'Error: El directorio de PHP no existe';
+        }
+
+        var process = await Process.start('powershell', [
+            '-Command',
+            '[Environment]::SetEnvironmentVariable("PATH", [Environment]::GetEnvironmentVariable("PATH", [EnvironmentVariableTarget]::User) + ";$windowsPath\\$phpVersion", [EnvironmentVariableTarget]::User)'
+        ], runInShell: true);
+
+        await process.stdin.close();
+
+        var output = await process.stdout.transform(const SystemEncoding().decoder).join();
+        var error = await process.stderr.transform(const SystemEncoding().decoder).join();
+
+        if (error.isNotEmpty) {
+            Log().write('Error: $error', 'ERROR');
+            return 'Error: $error';
+        }
+
+        // Verificamos si la carpeta se agrego al PATH
+        var processCheck = await Process.start('powershell', [
+            '-Command',
+            '[System.Environment]::GetEnvironmentVariable(\'Path\', \'User\')'
+        ], runInShell: true);
+
+        var pathOutput = await processCheck.stdout.transform(const SystemEncoding().decoder).join();
+        var pathError = await processCheck.stderr.transform(const SystemEncoding().decoder).join();
+
+        if (pathError.isNotEmpty) {
+            Log().write('Error al verificar el PATH: $pathError', 'ERROR');
+            return 'Error al verificar el PATH: $pathError';
+        }
+
+        if (pathOutput.contains('$windowsPath\\$phpVersion')) {
+            Log().write('$phpVersion agregado al PATH', 'INFO');
+        } else {
+            Log().write('Error: No se pudo agregar $phpVersion al PATH', 'ERROR');
+            return 'Error: No se pudo agregar $phpVersion al PATH';
         }
 
         return output;
