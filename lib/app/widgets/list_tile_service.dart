@@ -6,7 +6,7 @@ class ListTileService extends StatelessWidget {
     final IconData serviceIcon;
     final String serviceName;
     final String serviceVersion;
-    final List<Widget> serviceActions;
+    final List<Map<String, dynamic>> serviceActions;
 
     const ListTileService({
         super.key,
@@ -43,12 +43,30 @@ class ListTileService extends StatelessWidget {
                     style: const TextStyle(color: Colors.white),
                 ),
 
-                trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: serviceActions,
-                ),
+                trailing: _buildDropdownButton(context),
 
             )
+        );
+    }
+
+    Widget _buildDropdownButton(BuildContext context) {
+        return PopupMenuButton<Map<String, dynamic>>(
+            icon: const Icon(Icons.more_vert, color: Colors.white),
+            tooltip: 'Opciones',
+            itemBuilder: (BuildContext context) {
+                return serviceActions.map((Map<String, dynamic> action) {
+                    return PopupMenuItem<Map<String, dynamic>>(
+                        value: action,
+                        child: ListTile(
+                            leading: Icon(action['icon'], color: Colors.black),
+                            title: Text(action['label']),
+                        ),
+                    );
+                }).toList();
+            },
+            onSelected: (Map<String, dynamic> selectedAction) {
+                selectedAction['onPressed']?.call();
+            },
         );
     }
 }
